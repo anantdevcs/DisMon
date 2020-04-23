@@ -1,6 +1,9 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import speech_recognition as sr
 import os
+from flask_restful import Resource, Api 
+import requests 
+
 
 import uuid
 app = Flask(__name__)
@@ -32,7 +35,7 @@ def upload():
         audio_data = r.record(source)
         text = r.recognize_google(audio_data)
         print(text)
-        
+
 
 
 
@@ -40,6 +43,42 @@ def upload():
         
 
 
+
+
+api = Api(app) 
+
+class Square(Resource): 
+  
+    def get(self):
+        return jsonify({'info':'fu'})
+    
+    def post(self): 
+        inp = request.get_json()
+
+
+        return ((inp))
+  
+
+api.add_resource(Square, '/square')
+
+
+@app.route('/sympts')
+
+def sympts():
+    text = open('symptoms.txt').read()
+    sympts_list = text.split(sep= '\n')
+    
+    return jsonify(sympts_list)
+
+# @app.route('/parse', methods = )
+
+# def parse():
+@app.route('/demo')
+def demo():
+    uri = 'http://127.0.0.1:5000/square'
+    data = ({'num':10})
+    r = requests.post(url = uri, data = data) 
+    return r.text
 
 
 if __name__ == '__main__':
