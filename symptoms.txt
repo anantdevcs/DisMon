@@ -13,10 +13,10 @@ Chills
 Fever
 numbness
 tingling 
-electric tweaks
+electric_tweaks
 Light-headed
 Dizzy
-black out
+blackout
 spinning around me
 My mouth is dry
 Nauseated
