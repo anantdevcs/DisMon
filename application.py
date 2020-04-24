@@ -46,6 +46,40 @@ def translate(filename):
         return make_response( jsonify({'error' : 'can not translate'}), 400)
 
 
+
+def top_synonyms(phrase, max_lim = 10):
+    '''
+    return top max_lim # of similarly meaning words to phrase
+    Uses DataMuse free API
+    '''
+    url = 'https://api.datamuse.com/words'
+    params = {'ml' : phrase}
+    resp_json = requests.get(url, params = params).json()
+    synonyms = []
+    for entry in resp_json:
+        synonyms.append(entry['word'])
+        if len(synonyms) == max_lim:
+            break
+
+    return make_response( jsonify({'synonyms':synonyms}) , 200)
+
+
+
+
+
+
+
+
+@app.route('/test')
+
+def test():
+    return top_synonyms('in pain')
+
+
+
+    
+
+
         
     
     

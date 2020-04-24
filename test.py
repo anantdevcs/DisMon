@@ -5,6 +5,6 @@ A file for testing only
 
 import requests
 
-url = 'http://127.0.0.1:5000/translate/s.wav'
+from application import top_synonyms
 
-print(requests.get(url).text  )
+print(top_synonyms('happy'))
