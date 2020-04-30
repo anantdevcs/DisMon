@@ -1,6 +1,7 @@
 import pickle
 import requests
 import uuid
+import os
 
 class Zone:
     def __init__(self, lon, lat, zone_uniquename):
@@ -30,28 +31,36 @@ class Zone:
             if symptom not in self.all_symptoms:
                 self.update_symptomlist()
                 if symptom not in self.all_symptoms:
-                    raise KeyError("This symptom is not found")
+                    raise KeyError(f"This symptom {symptom} is not found")
 
             else :
                 print(symptom)
                 self.symptom_counts[symptom] += 1
 
     def checkpoint(self):
-        self.checkpoint_list.append(self.symptom_counts)
-        self.symptom_counts.clear()
+        self.checkpoint_list.append(self.symptom_counts.copy())
+        for key in self.symptom_counts.keys():
+            self.symptom_counts[key] = 0
 
-    def print(self):
-        ''' Aux func for debug purposes'''
-        for dict in self.checkpoint_list:
-            print(dict)
+   
+    def show_checks(self) :
+        print(f'Printing the checkpoints for file with {self.lat} {self.lon} ')
+        for i in range(len(self.checkpoint_list)):
+            print(f'{i} Th checkpoint')
+            print(self.checkpoint_list[i])
+
+
+    def __str__(self):
+        s = f'Num of checkpoints : {len(self.checkpoint_list)} LAT {self.at} LON {self.lon} '
+        return s
 
 
 
 filename_to_zonename_mapper = {}
 
 def create_zones():
-    for lat in range(-1, 5):
-        for lon in range(-1, 3):
+    for lat in range(-30, 30):
+        for lon in range(-30, 30):
             zname = str(uuid.uuid4())
             cur_zone = Zone(lon, lat, zone_uniquename=zname )
             filename_to_zonename_mapper[str([lat, lon ])] = zname
@@ -59,13 +68,14 @@ def create_zones():
     dict_file = open('Master_dict', 'wb')
     pickle.dump(filename_to_zonename_mapper, dict_file)
     dict_file.close()
+    return filename_to_zonename_mapper
 
 
 
 
 def load_zone(filename):
     obj = pickle.load(open('zones/' + filename, 'rb'))
-    obj.print()
+    print(f'Loaded {obj.zone_uniquename}')
     return obj
 
 def load_dict():
@@ -76,7 +86,34 @@ def load_dict():
 
 #from zone_data_management import *
 
-create_zones()
+def add_entry(lon, lat, symptoms) :
+    
+    filename_to_zonename_mapper = load_dict()
+    zonename = filename_to_zonename_mapper[str([lon, lat])]
+    zone_obj = load_zone(zonename)
+    zone_obj.add_symptom(symptoms)
+    #zone_obj.print() 
+    zone_obj.save_zonefile()   
+
+
+def clear_zones():
+    for path in os.listdir('./zones'):
+        name = './zones/' + path
+        os.remove(name)
+    os.remove('Master_dict')
+
+def checkpoint_all_zones():
+    filename_to_zonename_mapper = load_dict()
+    for zonename in filename_to_zonename_mapper.values():
+        
+        zone_obj = load_zone(zonename)
+        zone_obj.checkpoint()
+        zone_obj.save_zonefile()
+        #zone_obj.show_checks()
+
+    
+
+    
 
 
 

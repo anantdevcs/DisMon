@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Analyze</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-light bg-light">
+        <span class="navbar-brand mb-0 h1">Report for Latitude {{zone_obj.lat}} and Longitude {{zone_obj.lon}} </span>
+        
+      </nav>
+
+      <div class="alert alert-success" role="alert">
+        
+        <p>Different checkpoints are line separated</p>
+        <br>
+        The symptoms are recorded into a checkpoint after every day </p>
+      </div>
+
+
+
+<div class="container">
+            
+  <table class="table table-hover"> 
+    <thead>
+      <tr>
+        
+        {% for symp in zone_obj.all_symptoms  %}
+        <th>
+            {{symp}}
+        </th>
+        {% endfor  %}
+        
+      </tr>
+    </thead>
+    <tbody>
+        
+        {% for chk in  zone_obj.checkpoint_list %}
+        <ol>
+            <tr>
+                
+                {% for cnt in chk.values()  %}
+                <td>
+                    {{cnt}}
+                </td>
+                {% endfor %}
+            </tr>
+        </ol>
+        
+        {% endfor %}
+        
+        <tr>
+            {% for cnt in zone_obj.symptom_counts.values()  %}
+            <td>
+                {{cnt}}
+            </td>
+            {% endfor %}
+        </tr>
+        
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

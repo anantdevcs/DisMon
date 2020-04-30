@@ -4,8 +4,8 @@ import os
 from flask_restful import Resource, Api 
 import requests 
 import re
-
-
+from zone_data_management import *
+import json as j 
 import uuid
 app = Flask(__name__)
 
@@ -36,15 +36,15 @@ def translate(filename):
 
     translator = sr.Recognizer()
 
-    try:
-        text = ""
-        with sr.AudioFile(filename) as source:
-            audio_data = translator.record(source)
-            #This system uses google translate API under the hood
-            text = translator.recognize_google(audio_data)
-        return make_response( jsonify({'translation' : text}, 200))
-    except :
-        return make_response( jsonify({'error' : 'can not translate'}), 400)
+    #try:
+    text = ""
+    with sr.AudioFile(filename) as source:
+        audio_data = translator.record(source)
+        #This system uses google translate API under the hood
+        text = translator.recognize_google(audio_data)
+    return make_response( jsonify({'translation' : text}, 200))
+    #except :
+    return make_response( jsonify({'error' : 'can not translate'}), 400)
 
 cache = {} 
 
@@ -69,7 +69,7 @@ def top_synonyms(phrase, max_lim = 10):
         cache[phrase] = synonyms
         return synonyms
     except :
-        raise KeyError("Internet not working")
+        return [phrase]
 
 
 
@@ -93,6 +93,7 @@ def extract_symotoms(all_symps, conversation_text):
                 symptoms_found.append(possible_symptom)
                 break
     
+    return symptoms_found
     return make_response(jsonify({'symptoms_extracted' : symptoms_found }) , 200  )
  
 
@@ -101,36 +102,97 @@ def extract_symotoms(all_symps, conversation_text):
 def add_to_global_db():
     '''
     It accepts POST request with inputs as-->
-    lat lon time list of all symptoms found
+    lat lon  list of all symptoms found
     and adds it to the centralized server for central monitoring
     '''
-    return 'work under progress'
+    
+    data = j.loads(request.data)
+    lon = data['lon']
+    lat = data['lat']
+    symptoms = data['symptoms']
+
+    add_entry(lon, lat, symptoms)
 
 
 
+    return str(symptoms)
 
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/upload', methods = ['POST'])
+def upload():
+    file = request.files['file']
+    lat = int(request.form['lat'])
+    lon = int(request.form['lon'])
+    ext = file.filename.split(sep = '.')[-1]
+    fname = str(uuid.uuid4()) +'.' +  str(ext)
+    file.save(fname)
+
+    url1 = 'http://127.0.0.1:5000/translate/' + fname
+    translated_text = requests.get(url1).json()[0]['translation']
+    print(f"symptoms found{translated_text}")
+    url2 = 'http://127.0.0.1:5000/all_symps'
+    all_symptoms = requests.get(url2).json()
+    
+    symptoms_found = extract_symotoms(all_symptoms, translated_text)
+    print(f"symptoms found {symptoms_found}")
+    add_entry(lon = lon, lat = lat, symptoms = symptoms_found)
+    os.remove(fname)
+
+    print(f'Symptoms found {symptoms_found}')
+    return render_template('index.html', alert = symptoms_found)
+
+@app.route('/analyse/<lat>/<lon>')
+    
+def analyse(lat, lon): 
+    lat = int(lat)
+    lon = int(lon)
+    aux_dict = load_dict()
+    zonename = aux_dict[str([lat, lon])]
+    zone_obj = load_zone(zonename)
+    return render_template('analyze.html', zone_obj = zone_obj)
+
+@app.route('/dashboard', methods = ['POST', 'GET'])
+
+def dashboard():
+    if request.method == 'POST': 
+        lon = int(request.form['lon'])
+        lat = int(request.form['lat'])
+        return redirect(f'/analyse/{lat}/{lon}')
+    else :
+        return render_template('dashboard.html')
+    
+@app.route('/chk')
+def chk():
+    checkpoint_all_zones()
+    return redirect('/dashboard')
+
+
+@app.route('/ex', methods = ['POST'])
+def ex():
+    num = j.loads(request.data)
+    print(num['num'])
+   
+
+    return str(111) 
 
 
 
 @app.route('/test')
 
 def test():
-    all_symps = requests.get('http://127.0.0.1:5000/all_symps').json()
-    print(type(all_symps))
-    text = 'i was bleeding and coughing badly. i am not able to walk. legs are fractured. can not eat'
-     
-    return extract_symotoms(all_symps, text)
 
-
-
-    
-
+    url = 'http://127.0.0.1:5000/add_to_global_db'
+    for i in range(5):
+        d = {'lat' : 0, 'lon' : 1, 'symptoms': ['fever', 'flu']}
 
         
-    
-    
 
-
+        res = requests.post(url , data = j.dumps(d)).text
+    return res
 
 
 if __name__ == '__main__':
