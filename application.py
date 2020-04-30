@@ -131,10 +131,10 @@ def upload():
     fname = str(uuid.uuid4()) +'.' +  str(ext)
     file.save(fname)
 
-    url1 = 'http://dismon.herokuapp.com//translate/' + fname
+    url1 = 'http://dismon.herokuapp.com/translate/' + fname
     translated_text = requests.get(url1).json()[0]['translation']
     print(f"symptoms found{translated_text}")
-    url2 = 'http://dismon.herokuapp.com//all_symps'
+    url2 = 'http://dismon.herokuapp.com/all_symps'
     all_symptoms = requests.get(url2).json()
     
     symptoms_found = extract_symotoms(all_symptoms, translated_text)
