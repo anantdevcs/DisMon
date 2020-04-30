@@ -130,7 +130,7 @@ def upload():
     ext = file.filename.split(sep = '.')[-1]
     fname = str(uuid.uuid4()) +'.' +  str(ext)
     file.save(fname)
-
+    print(url1)
     url1 = 'http://dismon.herokuapp.com/translate/' + fname
     translated_text = requests.get(url1).json()[0]['translation']
     print(f"symptoms found{translated_text}")
