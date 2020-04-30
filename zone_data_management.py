@@ -13,7 +13,7 @@ class Zone:
         self.all_symptoms = []
 
     def update_symptomlist(self):
-        self.all_symptoms = requests.get('http://127.0.0.1:5000/all_symps').json()
+        self.all_symptoms = requests.get('http://dismon.herokuapp.com//all_symps').json()
         for sympts in self.all_symptoms:
             self.symptom_counts[sympts] = 0
         

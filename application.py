@@ -8,7 +8,7 @@ from zone_data_management import *
 import json as j 
 import uuid
 app = Flask(__name__)
-
+import threading
 @app.route('/all_symps')
 
 def all_symps():
@@ -131,10 +131,10 @@ def upload():
     fname = str(uuid.uuid4()) +'.' +  str(ext)
     file.save(fname)
 
-    url1 = 'http://127.0.0.1:5000/translate/' + fname
+    url1 = 'http://dismon.herokuapp.com//translate/' + fname
     translated_text = requests.get(url1).json()[0]['translation']
     print(f"symptoms found{translated_text}")
-    url2 = 'http://127.0.0.1:5000/all_symps'
+    url2 = 'http://dismon.herokuapp.com//all_symps'
     all_symptoms = requests.get(url2).json()
     
     symptoms_found = extract_symotoms(all_symptoms, translated_text)
@@ -165,35 +165,9 @@ def dashboard():
     else :
         return render_template('dashboard.html')
     
-@app.route('/chk')
-def chk():
-    checkpoint_all_zones()
-    return redirect('/dashboard')
-
-
-@app.route('/ex', methods = ['POST'])
-def ex():
-    num = j.loads(request.data)
-    print(num['num'])
-   
-
-    return str(111) 
-
-
-
-@app.route('/test')
-
-def test():
-
-    url = 'http://127.0.0.1:5000/add_to_global_db'
-    for i in range(5):
-        d = {'lat' : 0, 'lon' : 1, 'symptoms': ['fever', 'flu']}
-
-        
-
-        res = requests.post(url , data = j.dumps(d)).text
-    return res
-
 
 if __name__ == '__main__':
-    app.run(debug = True)
+    clear_zones()
+    create_zones()
+    threading.Timer(6*60*60, checkpoint_all_zones).start()
+    app.run()
